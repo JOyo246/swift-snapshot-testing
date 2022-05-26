@@ -700,6 +700,7 @@ func addImagesForRenderedViews(_ view: View) -> [Async<View>] {
     .map { async in
       [
         Async { callback in
+          NSLog("in addImagesForRenderedViews callback")
           async.run { image in
             let imageView = ImageView()
             imageView.image = image
@@ -730,9 +731,12 @@ extension View {
       #endif
       return perform()
     }
+    NSLog("In View.SNAPSHOT")
     if let scnView = self as? SCNView {
+      NSLog("In Scene View")
       return Async(value: inWindow { scnView.snapshot() })
     } else if let skView = self as? SKView {
+      NSLog("IN SKVIEW")
       if #available(macOS 10.11, *) {
         let cgImage = inWindow { skView.texture(from: skView.scene!)!.cgImage() }
         #if os(macOS)
@@ -783,10 +787,12 @@ extension View {
       }
     }
     #endif
+    NSLog("Return nil after checking tpyes")
     return nil
   }
   #if os(iOS) || os(tvOS)
   func asImage() -> Image {
+    NSLog("In as image")
     let renderer = UIGraphicsImageRenderer(bounds: bounds)
     return renderer.image { rendererContext in
       layer.render(in: rendererContext.cgContext)
@@ -855,6 +861,7 @@ func snapshotView(
   viewController: UIViewController
   )
   -> Async<UIImage> {
+    NSLog("Arrived in snapshotVIew func")
     let initialFrame = view.frame
     let dispose = prepareView(
       config: config,
@@ -863,10 +870,12 @@ func snapshotView(
       view: view,
       viewController: viewController
     )
+    NSLog("Finihsed preparing view")
     // NB: Avoid safe area influence.
     if config.safeArea == .zero { view.frame.origin = .init(x: offscreen, y: offscreen) }
 
     return (view.snapshot ?? Async { callback in
+      NSLog("In async callback")
       addImagesForRenderedViews(view).sequence().run { views in
         callback(
           renderer(bounds: view.bounds, for: traits).image { ctx in
